@@ -121,6 +121,15 @@ class XMPP {
         React.NativeModules.RNXMPP.message(text, user, thread);
     }
 
+    joinRoom(jid, server, nickname){
+        React.NativeModules.RNXMPP.joinRoom(jid, server, nickname);
+    }
+
+    messageRoom(text, jid, server){
+        LOG(`Message: "${text}" being sent to room: ${jid}@${server}`);
+        React.NativeModules.RNXMPP.messageRoom(text, jid, server);
+    }
+
     sendStanza(stanza){
         RNXMPP.sendStanza(stanza);
     }

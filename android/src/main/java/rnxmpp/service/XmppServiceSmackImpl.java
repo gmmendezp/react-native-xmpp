@@ -6,12 +6,15 @@ import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.chat.Chat;
 import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.chat.ChatManagerListener;
 import org.jivesoftware.smack.chat.ChatMessageListener;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smack.filter.OrFilter;
 import org.jivesoftware.smack.filter.StanzaTypeFilter;
 import org.jivesoftware.smack.packet.IQ;
@@ -42,7 +45,7 @@ import rnxmpp.ssl.UnsafeSSLContext;
  * Copyright (c) 2016. Teletronics. All rights reserved
  */
 
-public class XmppServiceSmackImpl implements XmppService, ChatManagerListener, StanzaListener, ConnectionListener, ChatMessageListener, RosterLoadedListener {
+public class XmppServiceSmackImpl implements XmppService, ChatManagerListener, StanzaListener, ConnectionListener, ChatMessageListener, RosterLoadedListener, MessageListener {
     XmppServiceListener xmppServiceListener;
     Logger logger = Logger.getLogger(XmppServiceSmackImpl.class.getName());
 
@@ -145,6 +148,29 @@ public class XmppServiceSmackImpl implements XmppService, ChatManagerListener, S
     }
 
     @Override
+    public void joinRoom(String jid, String server, String nickname) {
+        MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
+        MultiUserChat muc = manager.getMultiUserChat(jid + '@' + server);
+        try {
+            muc.join(nickname);
+            muc.addMessageListener(this);
+        } catch (XMPPException.XMPPErrorException | SmackException e) {
+            logger.log(Level.WARNING, "Could not join room", e);
+        }
+    }
+
+    @Override
+    public void messageRoom(String text, String jid, String server) {
+        MultiUserChatManager manager = MultiUserChatManager.getInstanceFor(connection);
+        MultiUserChat muc = manager.getMultiUserChat(jid + '@' + server);
+        try {
+            muc.sendMessage(text);
+        } catch (SmackException e) {
+            logger.log(Level.WARNING, "Could not send message", e);
+        }
+    }
+
+    @Override
     public void presence(String to, String type) {
         try {
             connection.sendStanza(new Presence(Presence.Type.fromString(type), type, 1, Presence.Mode.fromString(type)));
@@ -235,6 +261,11 @@ public class XmppServiceSmackImpl implements XmppService, ChatManagerListener, S
 
     @Override
     public void processMessage(Chat chat, Message message) {
+        this.xmppServiceListener.onMessage(message);
+    }
+
+    @Override
+    public void processMessage(Message message) {
         this.xmppServiceListener.onMessage(message);
     }
 

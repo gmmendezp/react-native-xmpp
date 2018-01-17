@@ -50,6 +50,18 @@ public class RNXMPPModule extends ReactContextBaseJavaModule implements rnxmpp.s
 
     @Override
     @ReactMethod
+    public void joinRoom(String jid, String server, String nickname){
+        this.xmppService.joinRoom(jid, server, nickname);
+    }
+
+    @Override
+    @ReactMethod
+    public void messageRoom(String text, String jid, String server){
+        this.xmppService.messageRoom(text, jid, server);
+    }
+
+    @Override
+    @ReactMethod
     public void presence(String to, String type) {
         this.xmppService.presence(to, type);
     }

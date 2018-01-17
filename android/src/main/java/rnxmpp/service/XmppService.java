@@ -20,6 +20,12 @@ public interface XmppService {
     void message(String text, String to, String thread);
 
     @ReactMethod
+    void joinRoom(String jid, String server, String nickname);
+
+    @ReactMethod
+    void messageRoom(String text, String jid, String server);
+
+    @ReactMethod
     void presence(String to, String type);
 
     @ReactMethod
